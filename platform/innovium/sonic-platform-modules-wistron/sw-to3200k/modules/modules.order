@@ -1,0 +1,7 @@
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_cpld.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_fan.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_oom.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_psu.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_thermal.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_i2c_psu.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_leds.ko

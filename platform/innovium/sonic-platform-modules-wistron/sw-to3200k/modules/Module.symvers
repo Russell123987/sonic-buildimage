@@ -1,0 +1,2 @@
+0x48f5bf5f	sw_to3200k_fpga_sysled_get	/sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_cpld	EXPORT_SYMBOL
+0xd6966265	sw_to3200k_fpga_sysled_set	/sonic/platform/innovium/sonic-platform-modules-wistron/sw-to3200k/modules/wistron_sw_to3200k_cpld	EXPORT_SYMBOL
