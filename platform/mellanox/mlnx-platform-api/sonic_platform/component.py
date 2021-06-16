@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -323,6 +321,7 @@ class ONIEUpdater(object):
 
 class Component(ComponentBase):
     def __init__(self):
+        super(Component, self).__init__()
         self.name = None
         self.description = None
         self.image_ext_name = None

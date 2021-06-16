@@ -8,9 +8,18 @@ trigger:
     include:
       - master
       - 202012
+  paths:
+    exclude:
+      - .github
 
 pr:
-- master
+  branches:
+    include:
+      - master
+      - 202012
+  paths:
+    exclude:
+      - .github
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -24,85 +33,20 @@ resources:
 stages:
 - stage: Build
   pool: sonicbld
-
+  variables:
+    CACHE_MODE: rcache
+    ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
+      VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web'
   jobs:
-  - job:
-    displayName: "broadcom"
-    timeoutInMinutes: 600
-    steps:
-    - checkout: self
-      clean: true
-      submodules: recursive
-      displayName: 'Checkout code'
-    - script: |
-         git submodule foreach --recursive git clean -xfdf
-         git submodule foreach --recursive git reset --hard
-         git submodule update --init --recursive
-      displayName: 'reset submodules'
-    - script: |
-        sudo modprobe overlay
-        CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=rcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
-        ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=broadcom
-        trap "sudo rm -rf fsroot" EXIT
-        make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/sonic-broadcom.bin && \
-            ENABLE_SYNCD_RPC=y make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/docker-syncd-brcm-rpc.gz
-      displayName: 'Build sonic image'
-    - publish: $(System.DefaultWorkingDirectory)/
-      artifact: sonic-buildimage.broadcom
-      displayName: "Archive sonic image"
-
-  - job:
-    displayName: "mellanox"
-    timeoutInMinutes: 600
-    steps:
-    - checkout: self
-      clean: true
-      submodules: recursive
-      displayName: 'Checkout code'
-
-    - script: |
-         git submodule foreach --recursive git clean -xfdf
-         git submodule foreach --recursive git reset --hard
-         git submodule update --init --recursive
-      displayName: 'reset submodules'
-    - script: |
-        sudo modprobe overlay
-        CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=rcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/mellanox"
-        ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=mellanox
-        trap "sudo rm -rf fsroot" EXIT
-        make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/sonic-mellanox.bin && \
-            ENABLE_SYNCD_RPC=y make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/docker-syncd-mlnx-rpc.gz
-      displayName: 'Build sonic image'
-    - publish: $(System.DefaultWorkingDirectory)/
-      artifact: sonic-buildimage.mellanox
-      displayName: "Archive sonic image"
-
-  - job:
-    displayName: "kvm"
-    timeoutInMinutes: 600
-    steps:
-    - checkout: self
-      clean: true
-      submodules: recursive
-      displayName: 'Checkout code'
-
-    - script: |
-         git submodule foreach --recursive git clean -xfdf
-         git submodule foreach --recursive git reset --hard
-         git submodule update --init --recursive
-      displayName: 'reset submodules'
-    - script: |
-        echo $(Build.BuildNumber)
-        sudo modprobe overlay
-        CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=rcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/vs"
-        ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=vs
-        trap "sudo rm -rf fsroot" EXIT
-        make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS \
-            target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
-      displayName: 'Build sonic image'
-    - publish: $(System.DefaultWorkingDirectory)/
-      artifact: sonic-buildimage.kvm
-      displayName: "Archive sonic image"
+  - template: .azure-pipelines/azure-pipelines-build.yml
+    parameters:
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      jobGroups:
+      - name: vs
+      - name: broadcom
+        variables:
+          swi_image: yes
+      - name: mellanox
 
 - stage: Test
   variables:
@@ -134,8 +78,8 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifact: sonic-buildimage.kvm
-      displayName: "Download sonic-buildimage.kvm artifact"
+        artifact: sonic-buildimage.vs
+      displayName: "Download sonic-buildimage.vs artifact"
 
     - script: |
         set -x
